@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using WashUpAPIFix;
+using WashUpAPIFix.Dto;
 using WashUpAPIFix.Models;
 
 namespace WashUpAPIFix.Controllers
@@ -29,32 +30,83 @@ namespace WashUpAPIFix.Controllers
                 .Include(o => o.OrderDetails)
                     .ThenInclude(od => od.LaundryService)
                 .OrderByDescending(o => o.CreatedAt)
+                .Select(o => new
+                {
+                    o.LaundryOrderId,
+                    o.Status,
+                    o.PickupAddress,
+                    o.CreatedAt,
+
+                    Customer = new
+                    {
+                        o.User.userid,
+                        o.User.name,
+                        o.User.email
+                    },
+
+                    Courier = o.Courier == null ? null : new
+                    {
+                        o.Courier.userid,
+                        o.Courier.name,
+                        o.Courier.email
+                    },
+
+                    OrderDetails = o.OrderDetails.Select(od => new
+                    {
+                        od.LaundryServiceId,
+                        od.LaundryService.Name,
+                        od.Quantity,
+                        od.Subtotal
+                    })
+                })
                 .ToListAsync();
 
             return Ok(orders);
         }
 
+
         // GET: api/orders/my - User & Courier melihat pesanan masing-masing
         [HttpGet("my")]
-        [Authorize(Roles = "user,courier")]
+        [Authorize(Roles = "user")]
         public async Task<IActionResult> GetMyOrders()
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            string role = User.FindFirstValue(ClaimTypes.Role)!;
 
-            var query = _context.LaundryOrders
+            var orders = await _context.LaundryOrders
+                .Where(o => o.UserId == userId)
                 .Include(o => o.OrderDetails)
                     .ThenInclude(od => od.LaundryService)
-                .AsQueryable();
+                .Include(o => o.Payment)
+                .Include(o => o.Rating)
+                .Select(o => new OrderDto
+                {
+                    LaundryOrderId = o.LaundryOrderId,
+                    Status = o.Status,
+                    PickupAddress = o.PickupAddress,
+                    CreatedAt = o.CreatedAt,
+                    OrderDetails = o.OrderDetails.Select(od => new OrderDetailDto
+                    {
+                        ServiceName = od.LaundryService.Name,
+                        Quantity = od.Quantity,
+                        Subtotal = od.Subtotal
+                    }).ToList(),
+                    Payment = o.Payment == null ? null : new PaymentDto
+                    {
+                        Method = o.Payment.Method,
+                        Amount = o.Payment.Amount,
+                        Status = o.Payment.Status,
+                        PaidAt = o.Payment.PaidAt,
+                        PaymentProofUrl = o.Payment.PaymentProofUrl
+                    },
+                    Rating = o.Rating == null ? null : new RatingDto
+                    {
+                        Score = o.Rating.Score,
+                        Comment = o.Rating.Comment,
+                        RatedAt = o.Rating.RatedAt
+                    }
+                })
+                .ToListAsync();
 
-            query = role switch
-            {
-                "user" => query.Where(o => o.UserId == userId),
-                "courier" => query.Where(o => o.CourierId == userId),
-                _ => query
-            };
-
-            var orders = await query.OrderByDescending(o => o.CreatedAt).ToListAsync();
             return Ok(orders);
         }
 

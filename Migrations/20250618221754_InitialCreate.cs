@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace WashUpAPIFix.Migrations
 {
     /// <inheritdoc />
-    public partial class RemoveOrderDateFromLaundryOrder : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -51,10 +51,10 @@ namespace WashUpAPIFix.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     userid = table.Column<int>(type: "integer", nullable: false),
                     courierid = table.Column<int>(type: "integer", nullable: true),
-                    laundryserviceid = table.Column<int>(type: "integer", nullable: false),
                     pickupaddress = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: false),
                     status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    createdat = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    createdat = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    laundryserviceid = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -63,8 +63,7 @@ namespace WashUpAPIFix.Migrations
                         name: "FK_laundryorders_laundryservices_laundryserviceid",
                         column: x => x.laundryserviceid,
                         principalTable: "laundryservices",
-                        principalColumn: "laundryserviceid",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "laundryserviceid");
                     table.ForeignKey(
                         name: "FK_laundryorders_users_courierid",
                         column: x => x.courierid,
@@ -112,8 +111,8 @@ namespace WashUpAPIFix.Migrations
                     paymentid = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     laundryorderid = table.Column<int>(type: "integer", nullable: false),
-                    Method = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    Amount = table.Column<decimal>(type: "numeric", nullable: false),
+                    method = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    amount = table.Column<decimal>(type: "numeric", nullable: false),
                     paidat = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     paymentproofurl = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
                     status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false)

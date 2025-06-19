@@ -39,7 +39,7 @@ namespace WashUpAPIFix.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("createdat");
 
-                    b.Property<int>("LaundryServiceId")
+                    b.Property<int?>("LaundryServiceId")
                         .HasColumnType("integer")
                         .HasColumnName("laundryserviceid");
 
@@ -135,7 +135,8 @@ namespace WashUpAPIFix.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PaymentId"));
 
                     b.Property<decimal>("Amount")
-                        .HasColumnType("numeric");
+                        .HasColumnType("numeric")
+                        .HasColumnName("amount");
 
                     b.Property<int>("LaundryOrderId")
                         .HasColumnType("integer")
@@ -144,7 +145,8 @@ namespace WashUpAPIFix.Migrations
                     b.Property<string>("Method")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("method");
 
                     b.Property<DateTime>("PaidAt")
                         .HasColumnType("timestamp with time zone")
@@ -256,11 +258,9 @@ namespace WashUpAPIFix.Migrations
                         .HasForeignKey("CourierId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("WashUpAPIFix.Models.LaundryService", "LaundryService")
+                    b.HasOne("WashUpAPIFix.Models.LaundryService", null)
                         .WithMany("LaundryOrders")
-                        .HasForeignKey("LaundryServiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("LaundryServiceId");
 
                     b.HasOne("WashUpAPIFix.Models.User", "User")
                         .WithMany("Orders")
@@ -269,8 +269,6 @@ namespace WashUpAPIFix.Migrations
                         .IsRequired();
 
                     b.Navigation("Courier");
-
-                    b.Navigation("LaundryService");
 
                     b.Navigation("User");
                 });

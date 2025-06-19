@@ -23,18 +23,21 @@ namespace WashUpAPIFix.Controllers
         // GET: api/ratings (admin only)
         [HttpGet]
         [Authorize(Roles = "admin")]
-        public async Task<IActionResult> GetAllRatings()
+        public async Task<IActionResult> GetARatings()
         {
             var ratings = await _context.Ratings
                 .Include(r => r.User)
                 .Include(r => r.LaundryOrder)
-                    .ThenInclude(o => o.LaundryService)
+                    .ThenInclude(o => o.OrderDetails)
+                        .ThenInclude(od => od.LaundryService)
                 .Select(r => new
                 {
                     r.RatingId,
                     User = new { r.User.userid, r.User.name, r.User.email },
                     OrderId = r.OrderId,
-                    ServiceName = r.LaundryOrder.LaundryService,
+                    ServiceName = r.LaundryOrder.OrderDetails
+                        .Select(od => od.LaundryService.Name)
+                        .FirstOrDefault(),
                     r.Score,
                     r.Comment,
                     r.RatedAt
@@ -54,12 +57,15 @@ namespace WashUpAPIFix.Controllers
             var ratings = await _context.Ratings
                 .Where(r => r.UserId == userId)
                 .Include(r => r.LaundryOrder)
-                    .ThenInclude(o => o.LaundryService)
+                    .ThenInclude(o => o.OrderDetails)
+                        .ThenInclude(od => od.LaundryService)
                 .Select(r => new
                 {
                     r.RatingId,
-                    OrderId = r.OrderId,
-                    ServiceName = r.LaundryOrder.LaundryService,
+                    r.OrderId,
+                    ServiceName = r.LaundryOrder.OrderDetails
+                        .Select(od => od.LaundryService.Name)
+                        .FirstOrDefault(),
                     r.Score,
                     r.Comment,
                     r.RatedAt
